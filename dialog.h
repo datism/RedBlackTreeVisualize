@@ -31,6 +31,8 @@ private:
     void fixRedRed(RBnode *n, RBnode *p, int dir);
     RBnode* RotateDirRoot(RBnode *p, int dir);
     void fixCollision(RBnode *n);
-    void movePos(RBnode *n, int dist, int dir);
+    void movePos(RBnode *n, const QPointF &dist);
+    void addArrow(RBnode *p, RBnode *n, int d);
+    void removeArrow(RBnode *n, int i);
 };
 #endif // DIALOG_H

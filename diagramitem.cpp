@@ -14,6 +14,9 @@ RBnode::RBnode(int i_key, QGraphicsItem *parent)
 {
     RIGHT_CHILD = NULL;
     LEFT_CHILD = NULL;
+    arrows[LEFT] = NULL;
+    arrows[RIGHT] = NULL;
+    arrows[PARENT] = NULL;
 
     myPolygon << QPointF(-DIAGONAL, -DIAGONAL) << QPointF(DIAGONAL, -DIAGONAL)
               << QPointF(DIAGONAL, DIAGONAL) << QPointF(-DIAGONAL, DIAGONAL)
@@ -55,35 +58,33 @@ void RBnode::unSelect()
 }
 
 
-void RBnode::removeArrow(Arrow *arrow)
-{
-    arrows.removeAll(arrow);
-}
+//void RBnode::removeArrow(int i)
+//{
+//    arrows[i] = NULL;
+//}
 
-void RBnode::removeArrows()
-{
-    // need a copy here since removeArrow() will
-    // modify the arrows container
-    const auto arrowsCopy = arrows;
-    for (Arrow *arrow : arrowsCopy) {
-        arrow->startItem()->removeArrow(arrow);
-        arrow->endItem()->removeArrow(arrow);
-        scene()->removeItem(arrow);
-        delete arrow;
-    }
-}
+//void RBnode::removeArrows()
+//{
+//    for (Arrow *arrow : arrows) {
+//        arrow->startItem()->removeArrow(arrow);
+//        arrow->endItem()->removeArrow(arrow);
+//        scene()->removeItem(arrow);
+//        delete arrow;
+//    }
+//}
 
-void RBnode::addArrow(Arrow *arrow)
-{
-    arrows.append(arrow);
-}
+//void RBnode::addArrow(Arrow *arrow, int i)
+//{
+//    arrows(arrow);
+//}
 
 
 QVariant RBnode::itemChange(GraphicsItemChange change, const QVariant &value)
 {
     if (change == QGraphicsItem::ItemPositionChange) {
-        for (Arrow *arrow : qAsConst(arrows))
-            arrow->updatePosition();
+        for (Arrow *arrow : arrows)
+            if (arrow != NULL)
+                arrow->updatePosition();
     }
 
     return value;

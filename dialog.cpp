@@ -114,15 +114,8 @@ void Dialog::add(int val)
     }
     else {
         cur->child[dir] = n;
-        n->setPos(cur->pos() + QPointF((2*dir-1) * WGAP, HGAP));
-
-        Arrow *arrow = new Arrow(cur, n);
-        cur->addArrow(arrow);
-        n->addArrow(arrow);
-        arrow->setZValue(-1000.0);
-        scene->addItem(arrow);
-        arrow->updatePosition();
-
+        n->setPos(cur->pos() + QPointF(DIST_DIR(WGAP,dir), HGAP));
+        addArrow(cur, n, dir);
         fixCollision(n);
 //        fixRedRed(n, cur, dir);
     }
@@ -151,9 +144,9 @@ void Dialog::fixCollision(RBnode *n)
     {
         //check wheter collision with right sub tree or left sub tree
         if (n->parent->pos().x() > root->pos().x())
-            movePos(root->RIGHT_CHILD, WGAP, RIGHT);
+            movePos(root->RIGHT_CHILD, QPointF(DIST_DIR(WGAP,RIGHT), 0));
         else
-            movePos(root->LEFT_CHILD, WGAP, LEFT);
+            movePos(root->LEFT_CHILD, QPointF(DIST_DIR(WGAP,LEFT), 0));
 
         return;
     }
@@ -162,35 +155,24 @@ void Dialog::fixCollision(RBnode *n)
     int nDir = CHILD_DIR(n);        //node direction
 
     if (aDir == nDir)
-    {
         cur->setPos(cur->pos() + QPointF(DIST_DIR(WGAP, aDir), 0));
-        movePos(cur->child[aDir], WGAP, aDir);
+    movePos(cur->child[aDir], QPointF(DIST_DIR(WGAP,aDir), 0));
 
-        while(cur->child[aDir] != NULL)
-            cur = cur->child[aDir];
+    while(cur->child[aDir] != NULL)
+       cur = cur->child[aDir];
 
-        fixCollision(cur);
-    }
-    else
-    {
-       movePos(cur->child[aDir], WGAP, aDir);
-
-       while(cur->child[aDir] != NULL)
-           cur = cur->child[aDir];
-
-       fixCollision(cur);
-    }
+    fixCollision(cur);
 }
 
-void Dialog::movePos(RBnode *n, int dist, int dir)
+void Dialog::movePos(RBnode *n, const QPointF &dist)
 {
     if (n == NULL)
         return;
 
-    n->setPos(n->pos() + QPointF(DIST_DIR(dist, dir), 0));
+    n->setPos(n->pos() + dist);
 
-    movePos(n->LEFT_CHILD, dist, dir);
-    movePos(n->RIGHT_CHILD, dist, dir);
+    movePos(n->LEFT_CHILD, dist);
+    movePos(n->RIGHT_CHILD, dist);
 }
 
 void Dialog::fixRedRed(RBnode *n, RBnode *p, int dir)
@@ -262,23 +244,61 @@ RBnode* Dialog::RotateDirRoot(RBnode* p, int dir)
 
     RBnode* g = p->parent;
     RBnode* s = p->child[1-dir];
-    RBnode* c;
+    RBnode* c = s->child[dir];
 
-    c = s->child[dir];
+    removeArrow(p, PARENT);
+    removeArrow(s, PARENT);
+    removeArrow(c, PARENT);
+
     p->child[1-dir] = c;
     if (c != NULL)
         c->parent = p;
+
+    movePos(p, QPointF(0, HGAP));
+    addArrow(p, c, 1 - dir);
+
 
     s->child[dir] = p;
     p->parent = s;
     s->parent = g;
 
+    movePos(s, QPointF(0, -HGAP));
+    addArrow(s, p, dir);
+
     if (g != NULL)
-        g->child[ p == g->RIGHT_CHILD ? RIGHT : LEFT ] = s;
+    {
+        dir = (p == g->RIGHT_CHILD) ? RIGHT : LEFT;
+        g->child[dir] = s;
+        addArrow(g, p, dir);
+    }
     else
         this->root = s;
 
     return s; // new root of subtree
+}
+
+void Dialog::addArrow(RBnode *p, RBnode *n, int d)
+{
+    Arrow *arrow = new Arrow(p, n);
+    p->arrows[d] = arrow;
+    n->arrows[PARENT] = arrow;
+    arrow->setZValue(-1000.0);
+    scene->addItem(arrow);
+    arrow->updatePosition();
+}
+
+void Dialog::removeArrow(RBnode *n, int i)
+{
+    Arrow *arrow = n->arrows[i];
+    n->arrows[i] = NULL;
+
+    if (i == PARENT)
+        n->parent->arrows[CHILD_DIR(n)] = NULL;
+    else
+        n->child[i]->arrows[PARENT] = NULL;
+
+    scene->removeItem(arrow);
+    delete arrow;
 }
 
 Dialog::~Dialog()
