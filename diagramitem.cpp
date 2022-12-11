@@ -15,12 +15,12 @@ RBnode::RBnode(int i_key, QGraphicsItem *parent)
     RIGHT_CHILD = NULL;
     LEFT_CHILD = NULL;
 
-//    myPolygon << QPointF(-SIDE, -SIDE) << QPointF(SIDE, -SIDE)
-//              << QPointF(SIDE, SIDE) << QPointF(-SIDE, SIDE)
-//              << QPointF(-SIDE, -SIDE);
+    myPolygon << QPointF(-DIAGONAL, -DIAGONAL) << QPointF(DIAGONAL, -DIAGONAL)
+              << QPointF(DIAGONAL, DIAGONAL) << QPointF(-DIAGONAL, DIAGONAL)
+              << QPointF(-DIAGONAL, -DIAGONAL);
 
-    myPolygon << QPointF(0, 0) << QPointF(SIDE, 0)
-              << QPointF(SIDE, SIDE) << QPointF(0, SIDE);
+//    myPolygon << QPointF(0, 0) << QPointF(SIDE, 0)
+//              << QPointF(SIDE, SIDE) << QPointF(0, SIDE);
 
     setPolygon(myPolygon);
 
@@ -33,12 +33,13 @@ RBnode::RBnode(int i_key, QGraphicsItem *parent)
     text->setHtml(QStringLiteral("<center>%1</center>").arg(key));
 
     brush = new QBrush(Qt::white, Qt::SolidPattern);
-    pen = new QPen(Qt::red, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+    setBrush(*brush);
+    pen = new QPen(Qt::red, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
     setPen(*pen);
 
 //    setFlag(QGraphicsItem::ItemIsMovable, true);
 //    setFlag(QGraphicsItem::ItemIsSelectable, true);
-//    setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+    setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
 }
 
 void RBnode::select()
@@ -84,16 +85,6 @@ QVariant RBnode::itemChange(GraphicsItemChange change, const QVariant &value)
         for (Arrow *arrow : qAsConst(arrows))
             arrow->updatePosition();
     }
-//    else if (change == QGraphicsItem::ItemSelectedChange) {
-//        if (value.toBool() == true)
-//            pen->setColor(Qt::green);
-//        else if (color == RED)
-//            pen->setColor(Qt::red);
-//        else if (color == BLACK)
-//            pen->setColor(Qt::black);
-
-//        setPen(*pen);
-//    }
 
     return value;
 }

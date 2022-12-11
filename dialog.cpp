@@ -1,5 +1,6 @@
 #include "dialog.h"
 #include "./ui_dialog.h"
+#include "arrow.h"
 
 #include <QScreen>
 #include <QPushButton>
@@ -8,8 +9,8 @@
 #define ROTATE_LEFT(n)    RotateDirRoot(n,LEFT)
 #define ROTATE_RIGHT(n)   RotateDirRoot(n,RIGHT)
 
-#define WGAP SIDE
-#define HGAP SIDE * 2
+#define WGAP DIAGONAL * 2
+#define HGAP DIAGONAL * 4
 #define DIST_DIR(dist,dir) (2*dir-1)*dist
 
 Dialog::Dialog(QWidget *parent)
@@ -26,7 +27,6 @@ Dialog::Dialog(QWidget *parent)
 
     root = NULL;
 
-//    scene->addText("Hello, world");
     scene->setSceneRect(0, 0, 5000, 5000);
     ui->graphicsView->centerOn(scene->width() / 2, 0);
 }
@@ -58,6 +58,25 @@ void Dialog::addNode()
     {
         add(v);
     }
+
+//    RBnode *cur = new RBnode(100);
+//    scene->addItem(cur);
+//    cur->setPos(scene->width() / 2, HGAP);
+
+//    RBnode *n = new RBnode(1000);
+//    scene->addItem(n);
+//    n->setPos(cur->pos() + QPointF(WGAP, HGAP));
+
+
+//    Arrow *arrow = new Arrow(cur, n);
+//    cur->addArrow(arrow);
+//    n->addArrow(arrow);
+//    arrow->setZValue(-1000);
+//    scene->addItem(arrow);
+//    arrow->updatePosition();
+
+
+//    cur->select();
 
 //    item->select();
 //    item->unSelect();
@@ -91,11 +110,19 @@ void Dialog::add(int val)
 
     if (cur == NULL) {
         this->root = n;
-        n->setPos(scene->width() / 2, SIDE);
+        n->setPos(scene->width() / 2, HGAP);
     }
     else {
         cur->child[dir] = n;
         n->setPos(cur->pos() + QPointF((2*dir-1) * WGAP, HGAP));
+
+        Arrow *arrow = new Arrow(cur, n);
+        cur->addArrow(arrow);
+        n->addArrow(arrow);
+        arrow->setZValue(-1000.0);
+        scene->addItem(arrow);
+        arrow->updatePosition();
+
         fixCollision(n);
 //        fixRedRed(n, cur, dir);
     }

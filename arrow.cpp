@@ -12,8 +12,8 @@
 Arrow::Arrow(RBnode *startItem, RBnode *endItem, QGraphicsItem *parent)
     : QGraphicsLineItem(parent), myStartItem(startItem), myEndItem(endItem)
 {
-    setFlag(QGraphicsItem::ItemIsSelectable, true);
-    setPen(QPen(myColor, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    //setFlag(QGraphicsItem::ItemIsSelectable, true);
+    setPen(QPen(Qt::black, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
 }
 
 QRectF Arrow::boundingRect() const
@@ -24,13 +24,6 @@ QRectF Arrow::boundingRect() const
                                       line().p2().y() - line().p1().y()))
         .normalized()
         .adjusted(-extra, -extra, extra, extra);
-}
-
-QPainterPath Arrow::shape() const
-{
-    QPainterPath path = QGraphicsLineItem::shape();
-    path.addPolygon(arrowHead);
-    return path;
 }
 
 void Arrow::updatePosition()
@@ -46,10 +39,9 @@ void Arrow::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
         return;
 
     QPen myPen = pen();
-    myPen.setColor(myColor);
-    qreal arrowSize = 20;
+    qreal arrowSize = 10;
     painter->setPen(myPen);
-    painter->setBrush(myColor);
+    painter->setBrush(Qt::black);
 
     QLineF centerLine(myStartItem->pos(), myEndItem->pos());
     QPolygonF endPolygon = myEndItem->polygon();
@@ -74,18 +66,9 @@ void Arrow::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
     QPointF arrowP2 = line().p1() + QPointF(sin(angle + M_PI - M_PI / 3) * arrowSize,
                                     cos(angle + M_PI - M_PI / 3) * arrowSize);
 
-    arrowHead.clear();
-    arrowHead << line().p1() << arrowP1 << arrowP2;
+    painter->drawLine(QLineF(line().p1(), arrowP1));
+    painter->drawLine(QLineF(line().p1(), arrowP2));
 
     painter->drawLine(line());
-    painter->drawPolygon(arrowHead);
-    if (isSelected()) {
-        painter->setPen(QPen(myColor, 1, Qt::DashLine));
-        QLineF myLine = line();
-        myLine.translate(0, 4.0);
-        painter->drawLine(myLine);
-        myLine.translate(0,-8.0);
-        painter->drawLine(myLine);
-    }
 }
 

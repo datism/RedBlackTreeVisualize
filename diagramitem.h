@@ -4,12 +4,13 @@
 #include <QGraphicsPixmapItem>
 #include <QList>
 
-#define SIDE 50
 #define LEFT  0
 #define RIGHT 1
 #define LEFT_CHILD  child[LEFT]
 #define RIGHT_CHILD child[RIGHT]
 #define CHILD_DIR(n) ( n == (n->parent)->RIGHT_CHILD ? RIGHT : LEFT )
+
+#define DIAGONAL 20
 
 class Arrow;
 
