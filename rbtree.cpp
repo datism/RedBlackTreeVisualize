@@ -12,20 +12,20 @@ RBtree::RBtree()
     :root(NULL)
 {}
 
-void swap(RBnode *a, RBnode *b)
-{
-    RBnode::Color tempC;
-    int temK;
+//void swap(RBnode *a, RBnode *b)
+//{
+//    RBnode::Color tempC;
+//    int temK;
 
-    tempC = a->color;
-    temK = a->key;
+//    tempC = a->color;
+//    temK = a->key;
 
-    a->color = b->color;
-    a->key = b->key;
+//    a->color = b->color;
+//    a->key = b->key;
 
-    b->color = tempC;
-    b->key = temK;
-}
+//    b->color = tempC;
+//    b->key = temK;
+//}
 
 RBnode* RBtree::RotateDirRoot(RBnode* p, int dir)
 {
@@ -235,35 +235,35 @@ RBnode* RBtree::findReplace(RBnode *n)
     return cur;
 }
 
-void RBtree::remove(int val)
-{
-    RBnode *n = find(val);
-    if (n == NULL)
-        return;
+//void RBtree::remove(int val)
+//{
+//    RBnode *n = find(val);
+//    if (n == NULL)
+//        return;
 
-    if (n == this->root && n->LEFT_CHILD == NULL && n->RIGHT_CHILD == NULL)
-    {
-        this->root = NULL;
-        return;
-    }
+//    if (n == this->root && n->LEFT_CHILD == NULL && n->RIGHT_CHILD == NULL)
+//    {
+//        this->root = NULL;
+//        return;
+//    }
 
-    RBnode *r = findReplace(n);
-    swap(r, n);
+//    RBnode *r = findReplace(n);
+//    swap(r, n);
 
-    if (r->color == RBnode::RED)
-    {
-        r->parent->child[CHILD_DIR(r)] = NULL;
-        delete r;
-        return;
-    }
+//    if (r->color == RBnode::RED)
+//    {
+//        r->parent->child[CHILD_DIR(r)] = NULL;
+//        delete r;
+//        return;
+//    }
 
-    RBnode *c = (r->RIGHT_CHILD != NULL) ? r->RIGHT_CHILD : r->LEFT_CHILD;
-    if (c != NULL) {
-        swap(r, n);
-        delete c;
-        return;
-    }
+//    RBnode *c = (r->RIGHT_CHILD != NULL) ? r->RIGHT_CHILD : r->LEFT_CHILD;
+//    if (c != NULL) {
+//        swap(r, n);
+//        delete c;
+//        return;
+//    }
 
-    fixDoubleBlack(r);
-    delete r;
-}
+//    fixDoubleBlack(r);
+//    delete r;
+//}

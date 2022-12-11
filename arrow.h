@@ -3,22 +3,22 @@
 
 #include <QGraphicsLineItem>
 
-class DiagramItem;
+class RBnode;
 
 class Arrow : public QGraphicsLineItem
 {
 public:
     enum { Type = UserType + 4 };
 
-    Arrow(DiagramItem *startItem, DiagramItem *endItem,
+    Arrow(RBnode *startItem, RBnode *endItem,
           QGraphicsItem *parent = nullptr);
 
     int type() const override { return Type; }
     QRectF boundingRect() const override;
     QPainterPath shape() const override;
     void setColor(const QColor &color) { myColor = color; }
-    DiagramItem *startItem() const { return myStartItem; }
-    DiagramItem *endItem() const { return myEndItem; }
+    RBnode *startItem() const { return myStartItem; }
+    RBnode *endItem() const { return myEndItem; }
 
     void updatePosition();
 
@@ -27,8 +27,8 @@ protected:
                QWidget *widget = nullptr) override;
 
 private:
-    DiagramItem *myStartItem;
-    DiagramItem *myEndItem;
+    RBnode *myStartItem;
+    RBnode *myEndItem;
     QPolygonF arrowHead;
     QColor myColor = Qt::black;
 };

@@ -9,7 +9,7 @@
 #include <QPen>
 #include <QtMath>
 
-Arrow::Arrow(DiagramItem *startItem, DiagramItem *endItem, QGraphicsItem *parent)
+Arrow::Arrow(RBnode *startItem, RBnode *endItem, QGraphicsItem *parent)
     : QGraphicsLineItem(parent), myStartItem(startItem), myEndItem(endItem)
 {
     setFlag(QGraphicsItem::ItemIsSelectable, true);

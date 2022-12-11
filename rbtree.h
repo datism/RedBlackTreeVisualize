@@ -25,7 +25,7 @@ public:
     RBnode(int i_key);
 
     friend class RBtree;
-    friend void swap(RBnode *a, RBnode *b);
+//    friend void swap(RBnode *a, RBnode *b);
 };
 
 class RBtree { // red–black tree

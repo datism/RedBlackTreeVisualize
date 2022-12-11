@@ -1,9 +1,11 @@
 #ifndef DIALOG_H
 #define DIALOG_H
 
+#include "diagramitem.h"
+
+#include <QTextEdit>
 #include <QDialog>
 #include <QGraphicsScene>
-#include "rbtree.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Dialog; }
@@ -21,7 +23,14 @@ private slots:
     void deleteNode();
 private:
     Ui::Dialog *ui;
-    RBtree tree;
     QGraphicsScene *scene;
+    RBnode *root;
+    QVector<int> readInput(QTextEdit *text);
+    void add(int val);
+    void remove(int val);
+    void fixRedRed(RBnode *n, RBnode *p, int dir);
+    RBnode* RotateDirRoot(RBnode *p, int dir);
+    void fixCollision(RBnode *n);
+    void movePos(RBnode *n, int dist, int dir);
 };
 #endif // DIALOG_H

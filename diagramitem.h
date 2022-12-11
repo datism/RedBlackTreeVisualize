@@ -4,28 +4,34 @@
 #include <QGraphicsPixmapItem>
 #include <QList>
 
-QT_BEGIN_NAMESPACE
-class QPixmap;
-class QGraphicsSceneContextMenuEvent;
-class QMenu;
-class QPolygonF;
-QT_END_NAMESPACE
+#define SIDE 50
+#define LEFT  0
+#define RIGHT 1
+#define LEFT_CHILD  child[LEFT]
+#define RIGHT_CHILD child[RIGHT]
+#define CHILD_DIR(n) ( n == (n->parent)->RIGHT_CHILD ? RIGHT : LEFT )
 
 class Arrow;
 
-class DiagramItem : public QGraphicsPolygonItem
+class RBnode : public QGraphicsPolygonItem
 {
 public:
-    DiagramItem(int i_value, QGraphicsItem *parent = nullptr);
+    enum Color {BLACK, RED};
+    RBnode* parent;
+    RBnode* child[2];
+    int key;
+    Color color;
+
+    RBnode(int i_key, QGraphicsItem *parent = nullptr);
 
     void removeArrow(Arrow *arrow);
     void removeArrows();
     QPolygonF polygon() const { return myPolygon; }
     void addArrow(Arrow *arrow);
-    int getValue() { return value; };
-    void setValue(int i_value);
+    void select();
+    void unSelect();
 
-
+    friend void swap(RBnode *a, RBnode *b);
 protected:
 //    void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
     QVariant itemChange(GraphicsItemChange change, const QVariant &value) override;
@@ -35,7 +41,8 @@ private:
 //    QMenu *myContextMenu;
     QList<Arrow *> arrows;
     QGraphicsTextItem *text;
-    int value;
+    QPen *pen;
+    QBrush *brush;
 };
 
 #endif // DIAGRAMITEM_H
