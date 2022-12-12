@@ -31,19 +31,21 @@ public:
 //    void removeArrows();
     QPolygonF polygon() const { return myPolygon; }
 //    void addArrow(Arrow *arrow);
-    void select();
-    void unSelect();
+    void select(){isSelected=true;};
+    void unSelect(){isSelected=false;};
 
     friend void swap(RBnode *a, RBnode *b);
 protected:
     QVariant itemChange(GraphicsItemChange change, const QVariant &value) override;
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
+               QWidget *widget = nullptr) override;
 
 private:
     QPolygonF myPolygon;
-
     QGraphicsTextItem *text;
     QPen *pen;
     QBrush *brush;
+    bool isSelected;
 };
 
 #endif // DIAGRAMITEM_H

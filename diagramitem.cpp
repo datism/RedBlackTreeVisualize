@@ -17,6 +17,7 @@ RBnode::RBnode(int i_key, QGraphicsItem *parent)
     arrows[LEFT] = NULL;
     arrows[RIGHT] = NULL;
     arrows[PARENT] = NULL;
+    isSelected = false;
 
     myPolygon << QPointF(-DIAGONAL, -DIAGONAL) << QPointF(DIAGONAL, -DIAGONAL)
               << QPointF(DIAGONAL, DIAGONAL) << QPointF(-DIAGONAL, DIAGONAL)
@@ -29,13 +30,14 @@ RBnode::RBnode(int i_key, QGraphicsItem *parent)
 
 
     text = new QGraphicsTextItem(this);
+    text->setDefaultTextColor(Qt::white);
     text->setTextWidth(this->boundingRect().width());
     QRectF rect = text->boundingRect();
     rect.moveCenter(this->boundingRect().center());
     text->setPos(rect.topLeft());
     text->setHtml(QStringLiteral("<center>%1</center>").arg(key));
 
-    brush = new QBrush(Qt::white, Qt::SolidPattern);
+    brush = new QBrush(Qt::red, Qt::SolidPattern);
     setBrush(*brush);
     pen = new QPen(Qt::red, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
     setPen(*pen);
@@ -45,18 +47,23 @@ RBnode::RBnode(int i_key, QGraphicsItem *parent)
     setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
 }
 
-void RBnode::select()
+void RBnode::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
-    brush->setColor(Qt::green);
-    setBrush(*brush);
-}
+    Qt::GlobalColor c = (color == RED) ? Qt::red : Qt::black;
 
-void RBnode::unSelect()
-{
-    brush->setColor(Qt::white);
-    setBrush(*brush);
-}
+    if (isSelected)
+        pen->setColor(Qt::green);
+    else
+        pen->setColor(c);
+    setPen(*pen);
 
+    brush->setColor(c);
+    setBrush(*brush);
+
+    text->setHtml(QStringLiteral("<center>%1</center>").arg(key));
+
+    QGraphicsPolygonItem::paint(painter, option, widget);
+}
 
 //void RBnode::removeArrow(int i)
 //{

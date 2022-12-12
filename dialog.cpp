@@ -4,6 +4,7 @@
 
 #include <QScreen>
 #include <QPushButton>
+#include <QThread>
 
 #define ROTATE_DIR(n,dir) RotateDirRoot(n,dir)
 #define ROTATE_LEFT(n)    RotateDirRoot(n,LEFT)
@@ -24,8 +25,10 @@ Dialog::Dialog(QWidget *parent)
 
     connect(ui->addButton, &QPushButton::clicked, this, &Dialog::addNode);
     connect(ui->deleteButton, &QPushButton::clicked, this, &Dialog::deleteNode);
+    connect(ui->continueButton, &QPushButton::clicked, this, &Dialog::con);
 
     root = NULL;
+    wait = false;
 
     scene->setSceneRect(0, 0, 5000, 5000);
     ui->graphicsView->centerOn(scene->width() / 2, 0);
@@ -95,14 +98,16 @@ void Dialog::add(int val)
 
     scene->addItem(n);
 
+    ui->stateLabel->setText("Find pos for new node");
     while(cur != NULL) {
-//        cur->select();
+        cur->select();
         dir = (cur->key > n->key) ? LEFT : RIGHT;
 
+        updateAndWait();
+        cur->unSelect();
         if (cur->child[dir] == NULL)
             break;
 
-//        cur->unSelect();
         cur = cur->child[dir];
     }
 
@@ -111,13 +116,14 @@ void Dialog::add(int val)
     if (cur == NULL) {
         this->root = n;
         n->setPos(scene->width() / 2, HGAP);
+        ui->stateLabel->clear();
     }
     else {
         cur->child[dir] = n;
         n->setPos(cur->pos() + QPointF(DIST_DIR(WGAP,dir), HGAP));
         addArrow(cur, n, dir);
         fixCollision(n);
-//        fixRedRed(n, cur, dir);
+        fixRedRed(n, cur, dir);
     }
 }
 
@@ -180,62 +186,90 @@ void Dialog::fixRedRed(RBnode *n, RBnode *p, int dir)
     struct RBnode* g;       // grand parent
     struct RBnode* u;       // uncle
 
-//    n->color = RBnode::RED;
-//    n->LEFT_CHILD  = NULL;
-//    n->RIGHT_CHILD = NULL;
-//    n->parent = p;
-
-//    // emty tree
-//    if (p == NULL) {
-//        this->root = n;
-//        return;
-//    }
-
     p->child[dir] = n;
     do {
+        n->select();
+
         // black parent
         if (p->color == RBnode::BLACK)
-            return;
+        {
+            ui->stateLabel->setText("Black parent");
+            ui->stepLabel->setText("no violation");
+
+            updateAndWait();
+            break;
+        }
 
        // double red at root
         if ((g = p->parent) == NULL)
         {
+            ui->stateLabel->setText("Red parent and parent is root");
+            ui->stepLabel->setText("Step1/1: change root to black");
+            updateAndWait();
+
             // change root to black, black height + 1
             p->color = RBnode::BLACK;
-            return;
+            break;
         }
 
 
         dir = CHILD_DIR(p);
         u = g->child[1-dir];
 
-        // black parent and black uncle
+        // Red parent and black uncle
         if (u == NULL || u->color == RBnode::BLACK)
         {
             // n is inner child
             if (n == p->child[1-dir])
             {
+                ui->stateLabel->setText("Red parent, black uncle, n is inner child");
+                ui->stepLabel->setText("Step1/1: rotate parent, n become parent");
+                updateAndWait();
+
                 ROTATE_DIR(p, dir);
                 // now p is outer child of n
-                //n = p;
                 p = g->child[dir];
+
+                ui->stepLabel->clear();
+                updateAndWait();
             }
+
+            ui->stateLabel->setText("Red parent, black uncle, n is outer child");
+            ui->stepLabel->setText("Step1/2: rotate grand parent, p become grandparent");
+            updateAndWait();
 
             // n is outer child
             RotateDirRoot(g, 1-dir);
+
+            ui->stepLabel->setText("Step2/2: change color of parent and sibling");
+            updateAndWait();
+
             p->color = RBnode::BLACK;
             g->color = RBnode::RED;
-            return;
+            break;
         }
 
+
         //red parent and red uncle
+        ui->stateLabel->setText("Red parent and red uncle");
+        ui->stepLabel->setText("Step1/2: p->black, u->black, g->red");
+        updateAndWait();
+
         p->color = RBnode::BLACK;
         u->color = RBnode::BLACK;
         g->color = RBnode::RED;
+
+        ui->stepLabel->setText("Step2/2: check violation for g");
+        updateAndWait();
+        n->unSelect();
         n = g;      //grand parent might violate double red
 
     } while ((p = n->parent) != NULL);
 
+    ui->stepLabel->clear();
+    updateAndWait();
+    n->unSelect();
+    ui->stateLabel->clear();
     return;
 }
 
@@ -246,30 +280,35 @@ RBnode* Dialog::RotateDirRoot(RBnode* p, int dir)
     RBnode* s = p->child[1-dir];
     RBnode* c = s->child[dir];
 
-    removeArrow(p, PARENT);
+    if (g != NULL)
+        removeArrow(p, PARENT);
     removeArrow(s, PARENT);
-    removeArrow(c, PARENT);
+    if (c != NULL)
+        removeArrow(c, PARENT);
+
+    p->child[1-dir] = NULL;
+    movePos(p, QPointF(0, HGAP));
 
     p->child[1-dir] = c;
-    if (c != NULL)
+    if (c != NULL) {
         c->parent = p;
+        addArrow(p, c, 1-dir);
+    }
 
-    movePos(p, QPointF(0, HGAP));
-    addArrow(p, c, 1 - dir);
-
+    s->child[dir] = NULL;
+    movePos(s, QPointF(0, -HGAP));
 
     s->child[dir] = p;
     p->parent = s;
     s->parent = g;
 
-    movePos(s, QPointF(0, -HGAP));
     addArrow(s, p, dir);
 
     if (g != NULL)
     {
         dir = (p == g->RIGHT_CHILD) ? RIGHT : LEFT;
         g->child[dir] = s;
-        addArrow(g, p, dir);
+        addArrow(g, s, dir);
     }
     else
         this->root = s;
@@ -299,6 +338,26 @@ void Dialog::removeArrow(RBnode *n, int i)
 
     scene->removeItem(arrow);
     delete arrow;
+}
+
+void Dialog::con()
+{
+    wait = true;
+}
+
+void Dialog::updateAndWait()
+{
+    wait = false;
+    ui->addButton->setEnabled(false);
+    ui->deleteButton->setEnabled(false);
+    while (1)
+    {
+        if (wait)
+            break;
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+    }
+    ui->addButton->setEnabled(true);
+    ui->deleteButton->setEnabled(true);
 }
 
 Dialog::~Dialog()
