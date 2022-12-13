@@ -21,7 +21,7 @@ public:
 private slots:
     void addNode();
     void deleteNode();
-    void con();
+    void nextStep();
 private:
     Ui::Dialog *ui;
     QGraphicsScene *scene;
@@ -37,6 +37,9 @@ private:
     void removeArrow(RBnode *n, int i);
     void updateAndWait();
 
-    bool wait;
+    bool next;
+    RBnode *findReplace(RBnode *n);
+    RBnode *findNode(int val);
+    void fixDoubleBlack(RBnode *n);
 };
 #endif // DIALOG_H

@@ -25,10 +25,10 @@ Dialog::Dialog(QWidget *parent)
 
     connect(ui->addButton, &QPushButton::clicked, this, &Dialog::addNode);
     connect(ui->deleteButton, &QPushButton::clicked, this, &Dialog::deleteNode);
-    connect(ui->continueButton, &QPushButton::clicked, this, &Dialog::con);
+    connect(ui->continueButton, &QPushButton::clicked, this, &Dialog::nextStep);
 
     root = NULL;
-    wait = false;
+    next = false;
 
     scene->setSceneRect(0, 0, 5000, 5000);
     ui->graphicsView->centerOn(scene->width() / 2, 0);
@@ -61,33 +61,16 @@ void Dialog::addNode()
     {
         add(v);
     }
-
-//    RBnode *cur = new RBnode(100);
-//    scene->addItem(cur);
-//    cur->setPos(scene->width() / 2, HGAP);
-
-//    RBnode *n = new RBnode(1000);
-//    scene->addItem(n);
-//    n->setPos(cur->pos() + QPointF(WGAP, HGAP));
-
-
-//    Arrow *arrow = new Arrow(cur, n);
-//    cur->addArrow(arrow);
-//    n->addArrow(arrow);
-//    arrow->setZValue(-1000);
-//    scene->addItem(arrow);
-//    arrow->updatePosition();
-
-
-//    cur->select();
-
-//    item->select();
-//    item->unSelect();
 }
 
 void Dialog::deleteNode()
 {
+    QVector<int> arr = readInput(ui->addTextEdit);
 
+    for (auto v: arr)
+    {
+        remove(v);
+    }
 }
 
 void Dialog::add(int val)
@@ -105,6 +88,7 @@ void Dialog::add(int val)
 
         updateAndWait();
         cur->unSelect();
+
         if (cur->child[dir] == NULL)
             break;
 
@@ -125,60 +109,6 @@ void Dialog::add(int val)
         fixCollision(n);
         fixRedRed(n, cur, dir);
     }
-}
-
-void Dialog::fixCollision(RBnode *n)
-{
-    RBnode* cur = n->parent;
-    double nx = n->pos().x();
-
-    //detect collision with ancestors
-    while (cur != NULL)
-    {
-        if (nx == cur->pos().x())
-            break;
-
-        cur = cur->parent;
-    }
-
-    //collision not found
-    if (cur == NULL)
-        return;
-
-    //collision with root
-    if (cur == root)
-    {
-        //check wheter collision with right sub tree or left sub tree
-        if (n->parent->pos().x() > root->pos().x())
-            movePos(root->RIGHT_CHILD, QPointF(DIST_DIR(WGAP,RIGHT), 0));
-        else
-            movePos(root->LEFT_CHILD, QPointF(DIST_DIR(WGAP,LEFT), 0));
-
-        return;
-    }
-
-    int aDir = CHILD_DIR(cur);      //ancestor direction
-    int nDir = CHILD_DIR(n);        //node direction
-
-    if (aDir == nDir)
-        cur->setPos(cur->pos() + QPointF(DIST_DIR(WGAP, aDir), 0));
-    movePos(cur->child[aDir], QPointF(DIST_DIR(WGAP,aDir), 0));
-
-    while(cur->child[aDir] != NULL)
-       cur = cur->child[aDir];
-
-    fixCollision(cur);
-}
-
-void Dialog::movePos(RBnode *n, const QPointF &dist)
-{
-    if (n == NULL)
-        return;
-
-    n->setPos(n->pos() + dist);
-
-    movePos(n->LEFT_CHILD, dist);
-    movePos(n->RIGHT_CHILD, dist);
 }
 
 void Dialog::fixRedRed(RBnode *n, RBnode *p, int dir)
@@ -273,6 +203,265 @@ void Dialog::fixRedRed(RBnode *n, RBnode *p, int dir)
     return;
 }
 
+void Dialog::remove(int val)
+{
+    RBnode *n = findNode(val);
+    if (n == NULL)
+        return;
+
+    if (n == this->root && n->LEFT_CHILD == NULL && n->RIGHT_CHILD == NULL)
+    {
+        ui->stateLabel->setText("Removed node is root and doesnt have any child");
+        ui->stepLabel->setText("Step1/1: tree is null");
+        updateAndWait();
+
+        scene->removeItem(n);
+        delete n;
+        this->root = NULL;
+
+        ui->stepLabel->clear();
+        updateAndWait();
+        ui->stateLabel->clear();
+
+        return;
+    }
+
+    RBnode *r = findReplace(n);
+
+    ui->stateLabel->setText("Swap node");
+    r->select();
+    n->select();
+    updateAndWait();
+
+    swap(r, n);
+
+    updateAndWait();
+    r->unSelect();
+    n->unSelect();
+    ui->stateLabel->clear();
+
+    if (r->color == RBnode::RED)
+    {
+        ui->stateLabel->setText("Removed node is red");
+        ui->stepLabel->setText("Step1/1: Just remove node from tree");
+        r->select();
+        updateAndWait();
+
+        removeArrow(r, PARENT);
+        r->parent->child[CHILD_DIR(r)] = NULL;
+        scene->removeItem(r);
+        delete r;
+
+        ui->stepLabel->clear();
+        updateAndWait();
+        ui->stateLabel->clear();
+
+        return;
+    }
+
+    RBnode *c = (r->RIGHT_CHILD != NULL) ? r->RIGHT_CHILD : r->LEFT_CHILD;
+    if (c != NULL) {
+        ui->stateLabel->setText("Removed node is black and it has 1 child");
+        ui->stepLabel->setText("Step1/2: Swap n with c");
+        r->select();
+        updateAndWait();
+
+        swap(r, n);
+
+        ui->stepLabel->setText("Step2/2: Remove c");
+        updateAndWait();
+
+        removeArrow(c, PARENT);
+        scene->removeItem(c);
+        delete c;
+
+        r->unSelect();
+        ui->stepLabel->clear();
+        updateAndWait();
+        ui->stateLabel->clear();
+
+        return;
+    }
+
+
+
+    fixDoubleBlack(r);
+
+    scene->removeItem(r);
+    delete r;
+}
+
+void Dialog::fixDoubleBlack(RBnode *n)
+{
+    struct RBnode* p = n->parent;
+    struct RBnode* s;  // sibling of n
+    struct RBnode* c;  // close nephew
+    struct RBnode* d;  // distant nephew
+    int dir;
+
+    removeArrow(n, PARENT);
+    movePos(n, QPointF(0, -HGAP));
+
+    dir = CHILD_DIR(n);
+    p->child[dir] = NULL;
+
+    do {
+        n->select();
+
+        if (p->child[dir] != NULL)
+            dir = CHILD_DIR(n);
+
+        s = p->child[1-dir];
+        d = s->child[1-dir];
+        c = s->child[ dir];
+
+        // s red ===> p+c+d black
+        if (s->color == RBnode::RED)
+        {
+            ui->stateLabel->setText("Sibling is red");
+            ui->stepLabel->setText("Step1/2: rotate p, s become parent");
+            updateAndWait();
+
+            RotateDirRoot(p, dir);
+
+            ui->stepLabel->setText("Step2/2: p->black, s->red");
+            updateAndWait();
+
+            p->color = RBnode::RED;
+            s->color = RBnode::BLACK;
+
+            s = c;
+            d = s->child[1-dir];
+            c = s->child[dir];
+            // now p red && s black
+        }
+
+        // c red && s+d black
+        if (c != NULL && c->color == RBnode::RED)
+        {
+            ui->stateLabel->setText("Close nephew is red");
+            ui->stepLabel->setText("Step1/2: rotate s, c become sibling");
+            updateAndWait();
+
+            ROTATE_DIR(s, 1-dir);
+
+            ui->stepLabel->setText("Step2/2: s->black, d->red");
+            updateAndWait();
+
+            s->color = RBnode::RED;
+            c->color = RBnode::BLACK;
+
+            d = s;
+            s = c;
+            // now: d red && s black
+        }
+
+        // d red && s+c black
+        if (d != NULL && d->color == RBnode::RED)
+        {
+            ui->stateLabel->setText("Distant nephew is red");
+            ui->stepLabel->setText("Step1/2: rotate p, s become parent");
+            updateAndWait();
+
+            RotateDirRoot(p, dir);
+
+            ui->stepLabel->setText("Step2/2: g->p color, uncle->black, p->black");
+            updateAndWait();
+
+            s->color = p->color;
+            p->color = RBnode::BLACK;
+            d->color = RBnode::BLACK;
+
+            break;
+        }
+
+        // p red && c+s+d black
+        if (p->color == RBnode::RED)
+        {
+            ui->stateLabel->setText("Parent is red");
+            ui->stepLabel->setText("Step1/1: p->black, s->red");
+            updateAndWait();
+
+            s->color = RBnode::RED;
+            p->color = RBnode::BLACK;
+
+            break;
+        }
+
+        // p + s + c + d black
+        ui->stateLabel->setText("p, s, c, d black");
+        ui->stepLabel->setText("Step1/2: s->red");
+        updateAndWait();
+
+        s->color = RBnode::RED;
+
+        ui->stepLabel->setText("Step2/2: check violation for p");
+        updateAndWait();
+
+        n->unSelect();
+        n = p;
+    } while ((p = n->parent) != NULL);
+
+    ui->stepLabel->clear();
+    updateAndWait();
+    ui->stateLabel->clear();
+    return;
+}
+
+RBnode* Dialog::findNode(int val)
+{
+    RBnode *cur = this->root;
+
+    ui->stateLabel->setText("Find node");
+    while (cur != NULL)
+    {
+        cur->select();
+
+        updateAndWait();
+        cur->unSelect();
+
+        if (cur->key == val)
+            return cur;
+
+        cur = (cur->key > val) ? cur->LEFT_CHILD : cur->RIGHT_CHILD;
+    }
+
+    ui->stateLabel->clear();
+    return cur;
+}
+
+RBnode* Dialog::findReplace(RBnode *n)
+{
+    RBnode *cur = n;
+    int dir;
+
+    ui->stateLabel->setText("Find replace node");
+    cur->select();
+
+    if (cur->LEFT_CHILD != NULL && cur->RIGHT_CHILD != NULL)
+    {
+        if (cur->LEFT_CHILD == NULL)
+            dir = RIGHT;
+        else
+            dir = LEFT;
+
+        cur = cur->child[dir];
+        while (cur->child[1-dir] != NULL)
+        {
+            cur->select();
+
+            updateAndWait();
+            cur->unSelect();
+
+            cur = cur->child[1-dir];
+        }
+    }
+
+    cur->unSelect();
+    ui->stateLabel->clear();
+    return cur;
+}
+
 RBnode* Dialog::RotateDirRoot(RBnode* p, int dir)
 {
 
@@ -316,6 +505,60 @@ RBnode* Dialog::RotateDirRoot(RBnode* p, int dir)
     return s; // new root of subtree
 }
 
+void Dialog::fixCollision(RBnode *n)
+{
+    RBnode* cur = n->parent;
+    double nx = n->pos().x();
+
+    //detect collision with ancestors
+    while (cur != NULL)
+    {
+        if (nx == cur->pos().x())
+            break;
+
+        cur = cur->parent;
+    }
+
+    //collision not found
+    if (cur == NULL)
+        return;
+
+    //collision with root
+    if (cur == root)
+    {
+        //check wheter collision with right sub tree or left sub tree
+        if (n->parent->pos().x() > root->pos().x())
+            movePos(root->RIGHT_CHILD, QPointF(DIST_DIR(WGAP,RIGHT), 0));
+        else
+            movePos(root->LEFT_CHILD, QPointF(DIST_DIR(WGAP,LEFT), 0));
+
+        return;
+    }
+
+    int aDir = CHILD_DIR(cur);      //ancestor direction
+    int nDir = CHILD_DIR(n);        //node direction
+
+    if (aDir == nDir)
+        cur->setPos(cur->pos() + QPointF(DIST_DIR(WGAP, aDir), 0));
+    movePos(cur->child[aDir], QPointF(DIST_DIR(WGAP,aDir), 0));
+
+    while(cur->child[aDir] != NULL)
+       cur = cur->child[aDir];
+
+    fixCollision(cur);
+}
+
+void Dialog::movePos(RBnode *n, const QPointF &dist)
+{
+    if (n == NULL)
+        return;
+
+    n->setPos(n->pos() + dist);
+
+    movePos(n->LEFT_CHILD, dist);
+    movePos(n->RIGHT_CHILD, dist);
+}
+
 void Dialog::addArrow(RBnode *p, RBnode *n, int d)
 {
     Arrow *arrow = new Arrow(p, n);
@@ -340,19 +583,19 @@ void Dialog::removeArrow(RBnode *n, int i)
     delete arrow;
 }
 
-void Dialog::con()
+void Dialog::nextStep()
 {
-    wait = true;
+    next = true;
 }
 
 void Dialog::updateAndWait()
 {
-    wait = false;
+    next = false;
     ui->addButton->setEnabled(false);
     ui->deleteButton->setEnabled(false);
     while (1)
     {
-        if (wait)
+        if (next)
             break;
         QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
     }

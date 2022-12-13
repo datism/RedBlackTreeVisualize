@@ -12,21 +12,6 @@ RBtree::RBtree()
     :root(NULL)
 {}
 
-//void swap(RBnode *a, RBnode *b)
-//{
-//    RBnode::Color tempC;
-//    int temK;
-
-//    tempC = a->color;
-//    temK = a->key;
-
-//    a->color = b->color;
-//    a->key = b->key;
-
-//    b->color = tempC;
-//    b->key = temK;
-//}
-
 RBnode* RBtree::RotateDirRoot(RBnode* p, int dir)
 {
 
@@ -133,107 +118,107 @@ void RBtree::add(int val)
     fixRedRed(n, cur, dir);
 }
 
-void RBtree::fixDoubleBlack(RBnode *n)
-{
-    struct RBnode* p = n->parent;
-    struct RBnode* s;  // sibling of n
-    struct RBnode* c;  // close nephew
-    struct RBnode* d;  // distant nephew
-    int dir;
+//void RBtree::fixDoubleBlack(RBnode *n)
+//{
+//    struct RBnode* p = n->parent;
+//    struct RBnode* s;  // sibling of n
+//    struct RBnode* c;  // close nephew
+//    struct RBnode* d;  // distant nephew
+//    int dir;
 
-    dir = CHILD_DIR(n);
-    p->child[dir] = NULL;
+//    dir = CHILD_DIR(n);
+//    p->child[dir] = NULL;
 
-    do {
-        if (p->child[dir] != NULL)
-            dir = CHILD_DIR(n);
+//    do {
+//        if (p->child[dir] != NULL)
+//            dir = CHILD_DIR(n);
 
-        s = p->child[1-dir];
-        d = s->child[1-dir];
-        c = s->child[ dir];
+//        s = p->child[1-dir];
+//        d = s->child[1-dir];
+//        c = s->child[ dir];
 
-        // s red ===> p+c+d black
-        if (s->color == RBnode::RED)
-        {
-            RotateDirRoot(p, dir);
-            p->color = RBnode::RED;
-            s->color = RBnode::BLACK;
-            s = c;
-            d = s->child[1-dir];
-            c = s->child[dir];
-            // now p red && s black
-        }
+//        // s red ===> p+c+d black
+//        if (s->color == RBnode::RED)
+//        {
+//            RotateDirRoot(p, dir);
+//            p->color = RBnode::RED;
+//            s->color = RBnode::BLACK;
+//            s = c;
+//            d = s->child[1-dir];
+//            c = s->child[dir];
+//            // now p red && s black
+//        }
 
-        // c red && s+d black
-        if (c != NULL && c->color == RBnode::RED)
-        {
-            ROTATE_DIR(s, 1-dir);
-            s->color = RBnode::RED;
-            c->color = RBnode::BLACK;
-            d = s;
-            s = c;
-            // now: d red && s black
-        }
+//        // c red && s+d black
+//        if (c != NULL && c->color == RBnode::RED)
+//        {
+//            ROTATE_DIR(s, 1-dir);
+//            s->color = RBnode::RED;
+//            c->color = RBnode::BLACK;
+//            d = s;
+//            s = c;
+//            // now: d red && s black
+//        }
 
-        // d red && s+c black
-        if (d != NULL && d->color == RBnode::RED)
-        {
-            RotateDirRoot(p, dir);
-            s->color = p->color;
-            p->color = RBnode::BLACK;
-            d->color = RBnode::BLACK;
-            return;
-        }
+//        // d red && s+c black
+//        if (d != NULL && d->color == RBnode::RED)
+//        {
+//            RotateDirRoot(p, dir);
+//            s->color = p->color;
+//            p->color = RBnode::BLACK;
+//            d->color = RBnode::BLACK;
+//            return;
+//        }
 
-        // p red && c+s+d black
-        if (p->color == RBnode::RED)
-        {
-            s->color = RBnode::RED;
-            p->color = RBnode::BLACK;
-            return;
-        }
+//        // p red && c+s+d black
+//        if (p->color == RBnode::RED)
+//        {
+//            s->color = RBnode::RED;
+//            p->color = RBnode::BLACK;
+//            return;
+//        }
 
-        // p + c + d black
-        s->color = RBnode::RED;
-        n = p;
-    } while ((p = n->parent) != NULL);
+//        // p + c + d black
+//        s->color = RBnode::RED;
+//        n = p;
+//    } while ((p = n->parent) != NULL);
 
-    return;
-}
+//    return;
+//}
 
-RBnode* RBtree::find(int val)
-{
-    RBnode *cur = this->root;
+//RBnode* RBtree::find(int val)
+//{
+//    RBnode *cur = this->root;
 
-    while (cur != NULL)
-    {
-        if (cur->key == val)
-            return cur;
+//    while (cur != NULL)
+//    {
+//        if (cur->key == val)
+//            return cur;
 
-        cur = (cur->key > val) ? cur->LEFT_CHILD : cur->RIGHT_CHILD;
-    }
+//        cur = (cur->key > val) ? cur->LEFT_CHILD : cur->RIGHT_CHILD;
+//    }
 
-    return cur;
-}
+//    return cur;
+//}
 
-RBnode* RBtree::findReplace(RBnode *n)
-{
-    RBnode *cur = n;
-    int dir;
+//RBnode* RBtree::findReplace(RBnode *n)
+//{
+//    RBnode *cur = n;
+//    int dir;
 
-    if (cur->LEFT_CHILD == NULL && cur->RIGHT_CHILD == NULL)
-        return n;
-    else if (cur->LEFT_CHILD == NULL)
-        dir = RIGHT;
-    else
-        dir = LEFT;
+//    if (cur->LEFT_CHILD == NULL && cur->RIGHT_CHILD == NULL)
+//        return n;
+//    else if (cur->LEFT_CHILD == NULL)
+//        dir = RIGHT;
+//    else
+//        dir = LEFT;
 
-    cur = cur->child[dir];
-    while (cur->child[1-dir] != NULL)
-        cur = cur->child[1-dir];
+//    cur = cur->child[dir];
+//    while (cur->child[1-dir] != NULL)
+//        cur = cur->child[1-dir];
 
-    return cur;
-}
+//    return cur;
+//}
 
 //void RBtree::remove(int val)
 //{
