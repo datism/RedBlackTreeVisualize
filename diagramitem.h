@@ -27,14 +27,14 @@ public:
 
     RBnode(int i_key, QGraphicsItem *parent = nullptr);
 
-//    void removeArrow(Arrow *arrow);
+//    void removeArrow(Arrow *arrow);Value
 //    void removeArrows();
     QPolygonF polygon() const { return myPolygon; }
 //    void addArrow(Arrow *arrow);
     void select(){isSelected=true;};
     void unSelect(){isSelected=false;};
 
-    friend void swap(RBnode *a, RBnode *b);
+    friend void swapValue(RBnode *a, RBnode *b);
 protected:
     QVariant itemChange(GraphicsItemChange change, const QVariant &value) override;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,

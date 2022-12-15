@@ -49,6 +49,7 @@ QVector<int> Dialog::readInput(QTextEdit *textEdit)
         arr.append(val);
    }
 
+   textEdit->clear();
    return arr;
 }
 
@@ -65,7 +66,7 @@ void Dialog::addNode()
 
 void Dialog::deleteNode()
 {
-    QVector<int> arr = readInput(ui->addTextEdit);
+    QVector<int> arr = readInput(ui->deleteTextEdit);
 
     for (auto v: arr)
     {
@@ -125,8 +126,8 @@ void Dialog::fixRedRed(RBnode *n, RBnode *p, int dir)
         {
             ui->stateLabel->setText("Black parent");
             ui->stepLabel->setText("no violation");
-
             updateAndWait();
+
             break;
         }
 
@@ -158,10 +159,14 @@ void Dialog::fixRedRed(RBnode *n, RBnode *p, int dir)
 
                 ROTATE_DIR(p, dir);
                 // now p is outer child of n
+                n = p;
                 p = g->child[dir];
 
                 ui->stepLabel->clear();
                 updateAndWait();
+                p->unSelect();
+                n->select();
+
             }
 
             ui->stateLabel->setText("Red parent, black uncle, n is outer child");
@@ -171,14 +176,13 @@ void Dialog::fixRedRed(RBnode *n, RBnode *p, int dir)
             // n is outer child
             RotateDirRoot(g, 1-dir);
 
-            ui->stepLabel->setText("Step2/2: change color of parent and sibling");
+            ui->stepLabel->setText("Step2/2: p->black, s->red");
             updateAndWait();
 
             p->color = RBnode::BLACK;
             g->color = RBnode::RED;
             break;
         }
-
 
         //red parent and red uncle
         ui->stateLabel->setText("Red parent and red uncle");
@@ -192,6 +196,7 @@ void Dialog::fixRedRed(RBnode *n, RBnode *p, int dir)
         ui->stepLabel->setText("Step2/2: check violation for g");
         updateAndWait();
         n->unSelect();
+
         n = g;      //grand parent might violate double red
 
     } while ((p = n->parent) != NULL);
@@ -228,12 +233,12 @@ void Dialog::remove(int val)
 
     RBnode *r = findReplace(n);
 
-    ui->stateLabel->setText("Swap node");
+    ui->stateLabel->setText("Swap node key");
     r->select();
     n->select();
     updateAndWait();
 
-    swap(r, n);
+    swapValue(r, n);
 
     updateAndWait();
     r->unSelect();
@@ -262,11 +267,11 @@ void Dialog::remove(int val)
     RBnode *c = (r->RIGHT_CHILD != NULL) ? r->RIGHT_CHILD : r->LEFT_CHILD;
     if (c != NULL) {
         ui->stateLabel->setText("Removed node is black and it has 1 child");
-        ui->stepLabel->setText("Step1/2: Swap n with c");
+        ui->stepLabel->setText("Step1/2: Swap key n with c");
         r->select();
         updateAndWait();
 
-        swap(r, n);
+        swapValue(r, n);
 
         ui->stepLabel->setText("Step2/2: Remove c");
         updateAndWait();
@@ -300,7 +305,7 @@ void Dialog::fixDoubleBlack(RBnode *n)
     int dir;
 
     removeArrow(n, PARENT);
-    movePos(n, QPointF(0, -HGAP));
+    movePos(n, QPointF(0, HGAP));
 
     dir = CHILD_DIR(n);
     p->child[dir] = NULL;
@@ -331,8 +336,11 @@ void Dialog::fixDoubleBlack(RBnode *n)
             s->color = RBnode::BLACK;
 
             s = c;
-            d = s->child[1-dir];
-            c = s->child[dir];
+            if (s != NULL)
+            {
+                d = s->child[1-dir];
+                c = s->child[dir];
+            }
             // now p red && s black
         }
 

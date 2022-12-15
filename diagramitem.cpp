@@ -70,17 +70,17 @@ QVariant RBnode::itemChange(GraphicsItemChange change, const QVariant &value)
     return value;
 }
 
-void swap(RBnode *a, RBnode *b)
+void swapValue(RBnode *a, RBnode *b)
 {
-    RBnode::Color tempC;
+//    RBnode::Color tempC;
     int temK;
 
-    tempC = a->color;
+//    tempC = a->color;
     temK = a->key;
 
-    a->color = b->color;
+//    a->color = b->color;
     a->key = b->key;
 
-    b->color = tempC;
+//    b->color = tempC;
     b->key = temK;
 }
