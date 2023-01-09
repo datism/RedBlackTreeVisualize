@@ -72,15 +72,8 @@ QVariant RBnode::itemChange(GraphicsItemChange change, const QVariant &value)
 
 void swapValue(RBnode *a, RBnode *b)
 {
-//    RBnode::Color tempC;
     int temK;
-
-//    tempC = a->color;
     temK = a->key;
-
-//    a->color = b->color;
     a->key = b->key;
-
-//    b->color = tempC;
     b->key = temK;
 }

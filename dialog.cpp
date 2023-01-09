@@ -446,7 +446,7 @@ RBnode* Dialog::findReplace(RBnode *n)
     ui->stateLabel->setText("Find replace node");
     cur->select();
 
-    if (cur->LEFT_CHILD != NULL && cur->RIGHT_CHILD != NULL)
+    if (cur->LEFT_CHILD != NULL || cur->RIGHT_CHILD != NULL)
     {
         if (cur->LEFT_CHILD == NULL)
             dir = RIGHT;
